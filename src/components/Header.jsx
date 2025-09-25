@@ -2,13 +2,17 @@ import { Link } from "react-router-dom";
 
 export default function Header() {
   return (
-    <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <h1 className="text-xl font-bold">🌍 GuideApp</h1>
-      <nav className="space-x-4">
-        <Link to="/" className="hover:underline">Home</Link>
-        <Link to="/map" className="hover:underline">Map</Link>
-        <Link to="/search" className="hover:underline">Search places</Link>
-        <Link to="/settings" className="hover:underline">Settings</Link>
+    <header className="w-full flex justify-center py-6 bg-darkblue text-white sticky top-0 z-50 shadow-md">
+      <nav className="flex space-x-8 text-lg font-semibold">
+        <Link to="/map" className="hover:text-yellow-400 transition-colors">
+          Map
+        </Link>
+        <Link to="/search" className="hover:text-yellow-400 transition-colors">
+          Search
+        </Link>
+        <Link to="/settings" className="hover:text-yellow-400 transition-colors">
+          Settings
+        </Link>
         
       </nav>
     </header>

@@ -1,5 +1,13 @@
+@import "leaflet/dist/leaflet.css"; /* ✅ put here */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import "leaflet/dist/leaflet.css";
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
