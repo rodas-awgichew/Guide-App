@@ -11,7 +11,7 @@ import useGeolocation from "../hooks/useGeolocation";
 import SearchBox from "../components/SearchBox";
 import { getRoute } from "../utils/api";
 
-// Fit map bounds to show entire route
+// Fit map bounds
 function FitBounds({ coords }) {
   const map = useMap();
   useEffect(() => {
@@ -20,21 +20,32 @@ function FitBounds({ coords }) {
   return null;
 }
 
-// Format step instructions nicely
+// Format human-readable instructions
 function formatInstruction(step) {
-  if (step.instruction) return step.instruction;
-  const maneuver = step.maneuver;
-  let text = maneuver?.type || "Continue";
-  if (maneuver?.modifier) text = `Turn ${maneuver.modifier.toLowerCase()}`;
+  let text = "";
+  switch (step.maneuver?.type) {
+    case "turn":
+      text = `Turn ${step.maneuver.modifier || ""}`;
+      break;
+    case "depart":
+      text = "Start";
+      break;
+    case "arrive":
+      text = "Arrive at destination";
+      break;
+    default:
+      text = step.maneuver?.type || "Continue";
+  }
   if (step.name) text += ` onto ${step.name}`;
-  return text;
+  if (step.distance) text += ` for ${(step.distance / 1000).toFixed(2)} km`;
+  return text.trim();
 }
 
 export default function MapPage() {
   const [start, setStart] = useState(null);
   const [destination, setDestination] = useState(null);
   const [route, setRoute] = useState(null);
-  const [mode, setMode] = useState("driving-car");
+  const [mode, setMode] = useState("driving");
 
   const { position, getLocation } = useGeolocation();
 
@@ -49,19 +60,7 @@ export default function MapPage() {
       [destination.lng, destination.lat],
       mode
     );
-
-    if (!data) return;
-
-    // Ensure distance and duration are numbers
-    const distance = data.distance ?? 0;
-    const duration = data.duration ?? 0;
-
-    setRoute({
-      coords: data.coords,
-      steps: data.steps,
-      distance,
-      duration,
-    });
+    if (data) setRoute(data);
   };
 
   const speak = (text) => {
@@ -71,14 +70,14 @@ export default function MapPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <header className="h-14 bg-blue-900 text-white flex items-center px-4 shadow z-50">
-        <h1 className="text-lg font-bold">Smart Navigator</h1>
-      </header>
-
-      <div className="flex flex-1">
+      {/* Fixed Header */}
+      <div className="p-4 border-b">
+  <h2 className="text-lg font-bold text-gray-700">Smart Navigator</h2>
+</div>
+      {/* Main content: sidebar + map */}
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="w-80 bg-gray-100 shadow-lg flex flex-col">
+        <div className="w-80 bg-gray-100 shadow-lg flex flex-col z-50">
           <div className="p-4 border-b">
             <h2 className="font-semibold text-gray-700 mb-2">Plan Your Trip</h2>
 
@@ -96,9 +95,9 @@ export default function MapPage() {
           {/* Mode Switch */}
           <div className="p-2 flex space-x-2 bg-blue-50">
             {[
-              { key: "driving-car", label: "🚗" },
-              { key: "foot-walking", label: "🚶" },
-              { key: "cycling-regular", label: "🚴" },
+              { key: "driving", label: "🚗" },
+              { key: "walking", label: "🚶" },
+              { key: "cycling", label: "🚴" },
             ].map((m) => (
               <button
                 key={m.key}
@@ -118,7 +117,8 @@ export default function MapPage() {
               <div>
                 <p className="font-semibold mb-2">
                   Total: {(route.distance / 1000).toFixed(2)} km •{" "}
-                  {Math.round(route.duration / 60)} min
+                  {Math.floor(route.duration / 3600)} hr{" "}
+                  {Math.round((route.duration % 3600) / 60)} min
                 </p>
                 <ol className="space-y-2">
                   {route.steps.map((step, i) => (
@@ -148,14 +148,26 @@ export default function MapPage() {
 
         {/* Map */}
         <div className="flex-1 relative">
-          <MapContainer center={[9.0155, 38.7636]} zoom={14} className="h-full">
+          <MapContainer
+            center={[9.0155, 38.7636]}
+            zoom={14}
+            style={{ height: "calc(100vh - 56px)", width: "100%" }}
+          >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution="&copy; OpenStreetMap contributors"
             />
 
-            {start && <Marker position={[start.lat, start.lng]}><Popup>Start</Popup></Marker>}
-            {destination && <Marker position={[destination.lat, destination.lng]}><Popup>Destination</Popup></Marker>}
+            {start && (
+              <Marker position={[start.lat, start.lng]}>
+                <Popup>Start</Popup>
+              </Marker>
+            )}
+            {destination && (
+              <Marker position={[destination.lat, destination.lng]}>
+                <Popup>Destination</Popup>
+              </Marker>
+            )}
 
             {route?.coords && (
               <>
@@ -166,12 +178,7 @@ export default function MapPage() {
           </MapContainer>
 
           {/* Floating Locate Me button */}
-          <button
-            onClick={getLocation}
-            className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-[1000]"
-          >
-            📍 Locate Me
-          </button>
+          
         </div>
       </div>
     </div>
