@@ -1,28 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function useGeolocation() {
   const [position, setPosition] = useState(null);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const getLocation = () => {
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser");
+      console.error("Geolocation not supported.");
       return;
     }
 
-    const watcher = navigator.geolocation.watchPosition(
+    navigator.geolocation.getCurrentPosition(
       (pos) => {
         setPosition({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         });
       },
-      (err) => setError(err.message),
+      (err) => {
+        console.error("Geolocation error:", err);
+      },
       { enableHighAccuracy: true }
     );
+  };
 
-    return () => navigator.geolocation.clearWatch(watcher);
-  }, []);
-
-  return { position, error };
+  return { position, getLocation };
 }

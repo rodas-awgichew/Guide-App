@@ -1,9 +1,6 @@
-const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const ROUTE_URL = "https://api.openrouteservice.org/v2/directions";
-const API_KEY = "YOUR_OPENROUTESERVICE_KEY"; // free signup, no card
+// utils/api.js
 
-// 🔍 Search place by name
-// Search place using OpenStreetMap Nominatim
+// 🔍 Search place using OpenStreetMap Nominatim (free, no key required)
 export async function searchPlace(query) {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
     query
@@ -12,22 +9,32 @@ export async function searchPlace(query) {
   return res.json();
 }
 
+// 🚗 Get route from OSRM (no key needed)
+// mode can be "driving", "walking", "cycling"
+export async function getRoute(start, end, mode = "driving") {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/${mode}/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson&steps=true`;
+    console.log("Requesting route:", url);
 
-// 🛣️ Get route between two points
-export async function getRoute(start, end, mode = "driving-car") {
-  const url = `${ROUTE_URL}/${mode}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      coordinates: [
-        [start.lng, start.lat],
-        [end.lng, end.lat],
-      ],
-    }),
-  });
-  return res.json();
+    const res = await fetch(url);
+    const data = await res.json();
+    console.log("OSRM response:", data);
+
+    if (data.code !== "Ok" || !data.routes?.length) {
+      console.error("No route found:", data);
+      return null;
+    }
+
+    const route = data.routes[0];
+    return {
+      coords: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]), // Leaflet format
+      steps: route.legs[0].steps.map((step) => ({
+        instruction: step.maneuver.instruction || step.name,
+        distance: step.distance,
+      })),
+    };
+  } catch (err) {
+    console.error("Error fetching route:", err);
+    return null;
+  }
 }

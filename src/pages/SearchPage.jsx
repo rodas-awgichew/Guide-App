@@ -1,25 +1,38 @@
 import { useState } from "react";
 import SearchBar from "../components/SearchBar";
-import { useNavigate } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 export default function SearchPage() {
-  const [selected, setSelected] = useState(null);
-  const navigate = useNavigate();
-
-  function handleSelect(place) {
-    setSelected(place);
-    // Go to map and pass coordinates
-    navigate("/map", { state: { destination: place } });
-  }
+  const [place, setPlace] = useState(null);
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Search Destination</h1>
-      <SearchBar onSelect={handleSelect} />
+    <div className="h-screen w-full flex flex-col">
+      {/* Header */}
+      <header className="h-14 bg-blue-900 text-white flex items-center px-4 shadow z-50">
+        <h1 className="text-lg font-bold">Search Destination</h1>
+      </header>
 
-      {selected && (
-        <div className="mt-4 p-2 bg-gray-100 rounded">
-          <p>Selected: {selected.name}</p>
+      {/* Search bar */}
+      <div className="p-4 z-50">
+        <SearchBar onSelect={setPlace} />
+      </div>
+
+      {/* Map: Render only after search */}
+      {place && (
+        <div className="flex-1">
+          <MapContainer
+            center={[place.lat, place.lng]}
+            zoom={16}
+            className="h-full w-full"
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution="&copy; OpenStreetMap contributors"
+            />
+            <Marker position={[place.lat, place.lng]}>
+              <Popup>{place.name}</Popup>
+            </Marker>
+          </MapContainer>
         </div>
       )}
     </div>
