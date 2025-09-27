@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   MapContainer,
   TileLayer,
@@ -47,25 +48,24 @@ function formatInstruction(step, unit) {
       text = step.maneuver?.type || "Continue";
   }
   if (step.name) text += ` onto ${step.name}`;
-  if (step.distance)
-    text += ` for ${convertDistance(step.distance, unit)}`;
+  if (step.distance) text += ` for ${convertDistance(step.distance, unit)}`;
   return text.trim();
 }
 
 export default function MapPage() {
+  const location = useLocation(); // for HomePage navigation
   const { darkMode } = useTheme();
+  const { position: geoPosition, getLocation } = useGeolocation();
 
   const [start, setStart] = useState(null);
   const [destination, setDestination] = useState(null);
   const [route, setRoute] = useState(null);
   const [mode, setMode] = useState("driving");
 
-  const { position, getLocation } = useGeolocation();
-
-  // Settings from localStorage
   const [voiceDirections, setVoiceDirections] = useState(true);
   const [distanceUnit, setDistanceUnit] = useState("km");
 
+  // Load settings from localStorage
   useEffect(() => {
     try {
       const v = localStorage.getItem("voiceDirections");
@@ -79,9 +79,15 @@ export default function MapPage() {
     }
   }, []);
 
+  // Initialize start/destination from HomePage card click
+  useEffect(() => {
+    if (location.state?.userLocation && !start) setStart(location.state.userLocation);
+    if (location.state?.destination && !destination) setDestination(location.state.destination);
+  }, [location.state, start, destination]);
+
+  // Fetch route when start/destination/mode changes
   useEffect(() => {
     if (start && destination) fetchRoute();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [start, destination, mode]);
 
   const fetchRoute = async () => {
@@ -104,30 +110,17 @@ export default function MapPage() {
   };
 
   return (
-    <div
-      className={`${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-      } h-screen flex flex-col`}
-    >
-      {/* Secondary (page) header */}
+    <div className={`${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"} h-screen flex flex-col`}>
+      {/* Secondary header */}
       <div className="px-4 py-3 border-b">
         <h2 className="text-lg font-bold">Smart Navigator</h2>
       </div>
 
-      {/* Main area: sidebar + map */}
       <div className="flex flex-1 overflow-hidden text-gray-900">
         {/* Sidebar */}
-        <aside
-          className={`${
-            darkMode ? "bg-gray-800" : "bg-gray-100"
-          } w-80 shadow-md flex flex-col z-10`}
-        >
+        <aside className={`${darkMode ? "bg-gray-800" : "bg-gray-100"} w-80 shadow-md flex flex-col z-10`}>
           <div className="p-4 border-b">
-            <h3
-              className={`${
-                darkMode ? "text-gray-100" : "text-gray-700"
-              } font-semibold mb-2`}
-            >
+            <h3 className={`${darkMode ? "text-gray-100" : "text-gray-700"} font-semibold mb-2`}>
               Plan Your Trip
             </h3>
 
@@ -135,7 +128,7 @@ export default function MapPage() {
             <SearchBox label="Destination" onSelect={setDestination} />
 
             <button
-              onClick={() => position && setStart(position)}
+              onClick={() => geoPosition && setStart(geoPosition)}
               className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
             >
               📍 Use My Location
@@ -151,11 +144,7 @@ export default function MapPage() {
             ].map((m) => (
               <button
                 key={m.key}
-                className={`px-2 py-1 rounded ${
-                  mode === m.key
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200"
-                }`}
+                className={`px-2 py-1 rounded ${mode === m.key ? "bg-blue-600 text-white" : "bg-gray-200"}`}
                 onClick={() => setMode(m.key)}
               >
                 {m.label}
@@ -168,33 +157,18 @@ export default function MapPage() {
             {route?.steps ? (
               <div>
                 <p className="font-semibold mb-2">
-                  Total:{" "}
-                  {route?.distance
-                    ? convertDistance(route.distance, distanceUnit)
-                    : "-"}{" "}
-                  •{" "}
-                  {route?.duration
-                    ? `${Math.floor(route.duration / 3600)} hr ${Math.round(
-                        (route.duration % 3600) / 60
-                      )} min`
-                    : "-"}
+                  Total: {route?.distance ? convertDistance(route.distance, distanceUnit) : "-"} • {route?.duration ? `${Math.floor(route.duration / 3600)} hr ${Math.round((route.duration % 3600) / 60)} min` : "-"}
                 </p>
 
                 <ol className="space-y-2">
                   {route.steps.map((step, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center justify-between bg-white rounded p-2 shadow-sm"
-                    >
+                    <li key={i} className="flex items-center justify-between bg-white rounded p-2 shadow-sm">
                       <span>
-                        <span className="font-bold">{i + 1}.</span>{" "}
-                        {formatInstruction(step, distanceUnit)}
+                        <span className="font-bold">{i + 1}.</span> {formatInstruction(step, distanceUnit)}
                       </span>
                       {voiceDirections && (
                         <button
-                          onClick={() =>
-                            speak(formatInstruction(step, distanceUnit))
-                          }
+                          onClick={() => speak(formatInstruction(step, distanceUnit))}
                           className="ml-2 text-blue-600"
                         >
                           🔊
@@ -212,22 +186,14 @@ export default function MapPage() {
 
         {/* Map */}
         <main className="flex-1 relative">
-          <MapContainer
-            center={[9.0155, 38.7636]}
-            zoom={14}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; OpenStreetMap contributors"
-            />
+          <MapContainer center={[9.0155, 38.7636]} zoom={14} style={{ height: "100%", width: "100%" }}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
 
             {start && (
               <Marker position={[start.lat, start.lng]}>
                 <Popup>Start</Popup>
               </Marker>
             )}
-
             {destination && (
               <Marker position={[destination.lat, destination.lng]}>
                 <Popup>Destination</Popup>
@@ -242,7 +208,13 @@ export default function MapPage() {
             )}
           </MapContainer>
 
-          
+          {/* Locate Me button */}
+          <button
+            onClick={getLocation}
+            className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50"
+          >
+            📍 Locate Me
+          </button>
         </main>
       </div>
     </div>
