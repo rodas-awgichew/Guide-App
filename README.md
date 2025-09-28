@@ -4,7 +4,6 @@ Welcome to the Guide App repository! This project is built to help users discove
 
 ## Features
 
-- **User Authentication:** Secure login and registration.
 - **Browse Guides:** Explore guides by location, category, or keyword.
 - **Create & Edit Guides:** Registered users can add and update guides.
 - **Search:** Find guides quickly using the search functionality.
@@ -32,9 +31,6 @@ Create a `.env` file in the root directory and add your environment variables (A
 # For Node.js
 npm start
 
-# For Python (Flask/Django)
-python app.py
-```
 
 ## Usage
 
