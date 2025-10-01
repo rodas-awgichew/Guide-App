@@ -64,20 +64,29 @@ export default function Settings() {
         <h2 className="text-2xl font-bold mb-6">Settings</h2>
 
         {/* Theme (uses ThemeContext) */}
-        <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-200 rounded-xl shadow-sm mb-4">
-          <span className="font-medium">Dark Mode</span>
+        <div
+       className={`flex justify-between items-center p-4 rounded-xl shadow-sm mb-4 transition-colors ${
+        darkMode ? "bg-blue-900 text-white" : "bg-gray-200 text-gray-900"
+        }`}
+>
+        <span className="font-medium">Dark Mode</span>
           <button
-            onClick={toggleDarkMode}
-            className={`px-4 py-2 rounded-full font-semibold transition-colors ${
-              darkMode ? "bg-blue-900 text-white" : "bg-gray-300 text-gray-800"
-            }`}
-          >
-            {darkMode ? "ON" : "OFF"}
-          </button>
-        </div>
+          onClick={toggleDarkMode}
+           className={`px-4 py-2 rounded-full font-semibold transition-colors ${
+         darkMode ? "bg-white text-blue-900" : "bg-blue-900 text-white"
+        }`}
+  >
+    {darkMode ? "ON" : "OFF"}
+  </button>
+</div>
+
 
         {/* Offline Cache */}
-        <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-200 rounded-xl shadow-sm mb-4">
+        <div
+       className={`flex justify-between items-center p-4 rounded-xl shadow-sm mb-4 transition-colors ${
+        darkMode ? "bg-blue-900 text-white" : "bg-gray-200 text-gray-900"
+        }`}
+>
           <span className="font-medium">Offline Cache</span>
           <button
             onClick={() => setOfflineCache((v) => !v)}
@@ -90,7 +99,11 @@ export default function Settings() {
         </div>
 
         {/* Voice Directions */}
-        <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-200 rounded-xl shadow-sm mb-4">
+        <div
+       className={`flex justify-between items-center p-4 rounded-xl shadow-sm mb-4 transition-colors ${
+        darkMode ? "bg-blue-900 text-white" : "bg-gray-200 text-gray-900"
+        }`}
+>
           <span className="font-medium">Voice Directions</span>
           <button
             onClick={() => setVoiceDirections((v) => !v)}
@@ -103,7 +116,11 @@ export default function Settings() {
         </div>
 
         {/* Distance Units */}
-        <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-200 rounded-xl shadow-sm mb-4">
+        <div
+       className={`flex justify-between items-center p-4 rounded-xl shadow-sm mb-4 transition-colors ${
+        darkMode ? "bg-blue-900 text-white" : "bg-gray-200 text-gray-900"
+        }`}
+>
           <span className="font-medium">Distance Units</span>
           <button
             onClick={() => setDistanceUnit((u) => (u === "km" ? "mi" : "km"))}
@@ -116,7 +133,7 @@ export default function Settings() {
         {/* Clear Cache */}
         <button
           onClick={clearCache}
-          className="w-full mt-6 py-3 dark:bg-gray-800 text-white font-semibold rounded-xl shadow hover:bg-red-600 transition-colors"
+          className="w-full mt-6 py-3 dark:bg-gray-800 text-white font-semibold rounded-xl shadow hover:bg-red-400 transition-colors"
         >
           Clear Cached Data
         </button>

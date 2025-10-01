@@ -87,21 +87,26 @@ export default function MapPage() {
 
   // Fetch route when start/destination/mode changes
   useEffect(() => {
-    if (start && destination) fetchRoute();
+    if (start && destination) {
+      fetchRoute(mode); // explicitly pass mode
+    }
   }, [start, destination, mode]);
-
-  const fetchRoute = async () => {
+  
+  const fetchRoute = async (travelMode) => {
     try {
       const data = await getRoute(
         [start.lng, start.lat],
         [destination.lng, destination.lat],
-        mode
+        travelMode
       );
-      if (data) setRoute(data);
+      if (data) {
+        setRoute(data); // replaces old route with new
+      }
     } catch (err) {
       console.error("MapPage: fetchRoute failed", err);
     }
   };
+  
 
   const speak = (text) => {
     if (!voiceDirections || !text) return;
@@ -135,53 +140,83 @@ export default function MapPage() {
             </button>
           </div>
 
-          {/* Mode switch */}
-          <div className="p-2 flex space-x-2 bg-blue-50">
-            {[
-              { key: "driving", label: "🚗" },
-              { key: "walking", label: "🚶" },
-              { key: "cycling", label: "🚴" },
-            ].map((m) => (
+
+{/* Directions */}
+<div className="flex-1 overflow-y-auto p-4 text-sm ">
+
+  {/* Mode switch */}
+  <div className="p-2 flex space-x-2 bg-gray-100  dark:bg-gray-100 rounded-md mb-4">
+    {[
+      { key: "driving", label: "🚗 Driving", color: "" },
+      { key: "walking", label: "🚶 Walking", color: "green" },
+      { key: "cycling", label: "🚴 Cycling", color: "orange" },
+    ].map((m) => (
+      <button
+        key={m.key}
+        className={`px-3 py-1 rounded-full font-medium transition-colors ${
+          mode === m.key
+            ? `bg-${m.color}-600 text-white dark:bg-gray-500`
+            : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-100"
+        }`}
+        onClick={() => setMode(m.key)}
+      >
+        {m.label}
+      </button>
+    ))}
+  </div>
+
+  {/* Directions List */}
+  {route?.steps ? (
+    <div key={mode}>
+      <p className="font-semibold mb-3 flex items-center dark:text-gray-200 ">
+        {mode === "driving" && <span className="mr-2">🚗 Driving Route</span>}
+        {mode === "walking" && <span className="mr-2">🚶 Walking Route</span>}
+        {mode === "cycling" && <span className="mr-2">🚴 Cycling Route</span>}
+      </p>
+
+      <p className="mb-4 dark:text-gray-200">
+        <span className="font-semibold">Total:</span>{" "}
+        {route?.distance
+          ? convertDistance(route.distance, distanceUnit)
+          : "-"}{" "}
+        •{" "}
+        {route?.duration
+          ? `${Math.floor(route.duration / 3600)} hr ${Math.round(
+              (route.duration % 3600) / 60
+            )} min`
+          : "-"}
+      </p>
+
+      <ol className="space-y-2 ">
+        {route.steps.map((step, i) => (
+          <li
+            key={i}
+            className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2 shadow-sm"
+          >
+            <span className="text-gray-800  dark:text-gray-200">
+  <span className="font-bold">{i + 1}.</span>{" "}
+  {formatInstruction(step, distanceUnit)}
+</span>
+            {voiceDirections && (
               <button
-                key={m.key}
-                className={`px-2 py-1 rounded ${mode === m.key ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-                onClick={() => setMode(m.key)}
+                onClick={() => speak(formatInstruction(step, distanceUnit))}
+                className="ml-2 text-blue-600 dark:text-blue-400"
               >
-                {m.label}
+                🔊
               </button>
-            ))}
-          </div>
-
-          {/* Directions */}
-          <div className="flex-1 overflow-y-auto p-4 text-sm">
-            {route?.steps ? (
-              <div>
-                <p className="font-semibold mb-2">
-                  Total: {route?.distance ? convertDistance(route.distance, distanceUnit) : "-"} • {route?.duration ? `${Math.floor(route.duration / 3600)} hr ${Math.round((route.duration % 3600) / 60)} min` : "-"}
-                </p>
-
-                <ol className="space-y-2">
-                  {route.steps.map((step, i) => (
-                    <li key={i} className="flex items-center justify-between bg-white rounded p-2 shadow-sm">
-                      <span>
-                        <span className="font-bold">{i + 1}.</span> {formatInstruction(step, distanceUnit)}
-                      </span>
-                      {voiceDirections && (
-                        <button
-                          onClick={() => speak(formatInstruction(step, distanceUnit))}
-                          className="ml-2 text-blue-600"
-                        >
-                          🔊
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            ) : (
-              <p className="text-gray-500">Enter start & destination</p>
             )}
-          </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  ) : (
+    <p className="text-gray-500 dark:text-gray-400">
+      Enter start & destination
+    </p>
+  )}
+</div>
+
+
         </aside>
 
         {/* Map */}
@@ -200,12 +235,18 @@ export default function MapPage() {
               </Marker>
             )}
 
-            {route?.coords && (
-              <>
-                <Polyline positions={route.coords} color="blue" />
-                <FitBounds coords={route.coords} />
-              </>
-            )}
+{route?.coords && (
+  <>
+    <Polyline
+      key={mode}
+      positions={route.coords}
+      color={
+        mode === "driving" ? "blue" : mode === "walking" ? "green" : "orange"
+      }
+    />
+    <FitBounds coords={route.coords} />
+  </>
+)}
           </MapContainer>
 
           {/* Locate Me button */}
