@@ -249,13 +249,7 @@ export default function MapPage() {
 )}
           </MapContainer>
 
-          {/* Locate Me button */}
-          <button
-            onClick={getLocation}
-            className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50"
-          >
-            📍 Locate Me
-          </button>
+        
         </main>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { searchPlace } from "../utils/api";
 
 export default function SearchBar({ onSelect }) {
@@ -6,12 +6,42 @@ export default function SearchBar({ onSelect }) {
   const [results, setResults] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [listening, setListening] = useState(false);
+
+  const recognitionRef = useRef(null);
+
+  // Setup Web Speech API
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        const speechResult = event.results[0][0].transcript;
+        setQuery(speechResult);
+        handleSearch(null, speechResult);
+        setListening(false);
+      };
+
+      recognition.onerror = () => setListening(false);
+      recognition.onend = () => setListening(false);
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
 
   // Handle search
-  async function handleSearch(e) {
-    e.preventDefault();
-    if (!query) return;
-    const data = await searchPlace(query);
+  async function handleSearch(e, overrideQuery = null) {
+    if (e) e.preventDefault();
+    const searchQuery = overrideQuery || query;
+    if (!searchQuery) return;
+
+    const data = await searchPlace(searchQuery);
     setResults(data);
     setActiveIndex(-1);
     setShowDropdown(true);
@@ -41,6 +71,18 @@ export default function SearchBar({ onSelect }) {
     setShowDropdown(false);
   };
 
+  const handleVoiceSearch = () => {
+    if (!recognitionRef.current) return alert("Not supported");
+  
+    recognitionRef.current.start();
+    setListening(true);
+  
+    recognitionRef.current.onend = () => {
+      // Restart automatically if still in listening mode
+      if (listening) recognitionRef.current.start();
+    };
+  };
+  
   return (
     <div className="w-full max-w-md mx-auto relative">
       <form onSubmit={handleSearch} className="flex mb-2 z-50 relative">
@@ -54,16 +96,24 @@ export default function SearchBar({ onSelect }) {
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded-r hover:bg-blue-600 transition relative z-50"
+          className="px-4 py-2 bg-blue-900 text-white hover:bg-blue-700 transition"
         >
           Search
+        </button>
+        <button
+          type="button"
+          onClick={handleVoiceSearch}
+          className={`ml-2 px-3 py-2 rounded transition ${
+            listening ? "bg-red-500 text-white" : "bg-gray-300 text-black"
+          }`}
+        >
+          🎤
         </button>
       </form>
 
       {/* Dropdown overlay */}
       {showDropdown && results.length > 0 && (
         <>
-          {/* Blurred overlay behind dropdown */}
           <div
             className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm z-40"
             onClick={() => setShowDropdown(false)}
