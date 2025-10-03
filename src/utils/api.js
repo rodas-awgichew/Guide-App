@@ -13,7 +13,7 @@ export async function searchPlace(query) {
 // mode can be "driving", "walking", "cycling"
 export async function getRoute(start, end, mode = "driving") {
   try {
-    const url = `https://router.project-osrm.org/route/v1/${mode}/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson&steps=true`;
+    const url = `https://router.project-osrm.org/route/v1/${mode}/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`;
     const res = await fetch(url);
     const data = await res.json();
 
@@ -25,12 +25,12 @@ export async function getRoute(start, end, mode = "driving") {
       coords: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
       steps: route.legs[0].steps.map((step) => ({
         instruction: step.maneuver.instruction || step.name,
-        distance: step.distance, // distance for this step in meters
-        maneuver: step.maneuver, // to generate readable turn instructions
+        distance: step.distance,
+        maneuver: step.maneuver,
         name: step.name,
       })),
-      distance: route.distance, // total distance in meters
-      duration: route.duration, // total duration in seconds
+      distance: route.distance,
+      duration: route.duration,
     };
   } catch (err) {
     console.error("Error fetching route:", err);
@@ -38,14 +38,10 @@ export async function getRoute(start, end, mode = "driving") {
   }
 }
 
-
-// Fetch nearby places from OpenStreetMap Overpass API
+// 🏨 Fetch nearby places from OpenStreetMap Overpass API
 export async function getNearbyPlaces(lat, lng, type) {
   try {
     const radius = 2000; // 2km radius
-
-    // Restaurants use "amenity=restaurant"
-    // Hotels use "tourism=hotel"
     const filter =
       type === "hotel" ? '["tourism"="hotel"]' : `["amenity"="${type}"]`;
 
@@ -77,7 +73,7 @@ export async function getNearbyPlaces(lat, lng, type) {
         "Unknown address",
       lat: el.lat || el.center?.lat,
       lng: el.lon || el.center?.lon,
-      image: `https://source.unsplash.com/400x300/?${type}`, // stock fallback
+      image: `https://source.unsplash.com/400x300/?${type}`,
     }));
   } catch (err) {
     console.error("Error fetching nearby places:", err);
@@ -85,10 +81,9 @@ export async function getNearbyPlaces(lat, lng, type) {
   }
 }
 
-// Calculate distance between two coords (Haversine formula)
-// utils/api.js or a separate utils file
-export function getDistance([lng1, lat1], [lng2, lat2]) {
-  const R = 6371e3; // Earth radius in meters
+// 📏 Correct Haversine Distance (expects [lat, lng])
+export function getDistance([lat1, lng1], [lat2, lng2]) {
+  const R = 6371e3; // meters
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -99,6 +94,5 @@ export function getDistance([lng1, lat1], [lng2, lat2]) {
     Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  const d = R * c; // in meters
-  return d; // returns distance in meters
+  return R * c; // meters
 }

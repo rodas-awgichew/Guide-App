@@ -8,9 +8,12 @@ export default function Header() {
     <header className="w-full bg-darkblue text-white sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-4 sm:px-6">
         {/* Optional Logo / Title (hidden on small screens) */}
-        <h1 className="text-lg sm:text-xl font-bold hidden sm:block">
+        {/* <h1 className="text-lg sm:text-xl font-bold hidden sm:block">
           GoBuddy
-        </h1>
+        </h1> */}
+        <Link to="/" className="text-lg sm:text-xl font-bold hidden sm:block">
+            GoBuddy
+          </Link>
 
         {/* Centered Desktop Menu */}
         <nav className="absolute left-1/2 transform -translate-x-1/2 hidden sm:flex space-x-8 text-lg font-semibold">

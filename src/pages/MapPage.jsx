@@ -115,6 +115,7 @@ export default function MapPage() {
   };
 
   return (
+    
     <div className={`${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"} h-screen flex flex-col`}>
       {/* Secondary header */}
       <div className="px-4 py-3 border-b">
@@ -125,25 +126,21 @@ export default function MapPage() {
         {/* Sidebar */}
         <aside className={`${darkMode ? "bg-gray-800" : "bg-gray-100"} w-80 shadow-md flex flex-col z-10`}>
           <div className="p-4 border-b">
-            <h3 className={`${darkMode ? "text-gray-100" : "text-gray-700"} font-semibold mb-2`}>
-              Plan Your Trip
-            </h3>
+            
 
             <SearchBox label="Start" onSelect={setStart} />
             <SearchBox label="Destination" onSelect={setDestination} />
 
             <button
               onClick={() => geoPosition && setStart(geoPosition)}
-              className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
+              className="mt-2 w-full bg-blue-900 text-white py-2 rounded"
             >
               📍 Use My Location
             </button>
           </div>
 
-
 {/* Directions */}
 <div className="flex-1 overflow-y-auto p-4 text-sm ">
-
   {/* Mode switch */}
   <div className="p-2 flex space-x-2 bg-gray-100  dark:bg-gray-100 rounded-md mb-4">
     {[
@@ -168,13 +165,25 @@ export default function MapPage() {
   {/* Directions List */}
   {route?.steps ? (
     <div key={mode}>
-      <p className="font-semibold mb-3 flex items-center dark:text-gray-200 ">
+      {/* Mode Title */}
+      <p
+        className={`font-semibold mb-3 flex items-center ${
+          darkMode ? "text-gray-200" : "text-black bg-gray-100 p-2 rounded"
+        }`}
+      >
         {mode === "driving" && <span className="mr-2">🚗 Driving Route</span>}
         {mode === "walking" && <span className="mr-2">🚶 Walking Route</span>}
         {mode === "cycling" && <span className="mr-2">🚴 Cycling Route</span>}
       </p>
 
-      <p className="mb-4 dark:text-gray-200">
+      {/* Total Distance & Duration */}
+      <p
+        className={`mb-4 ${
+          darkMode
+            ? "text-gray-200"
+            : "text-black bg-gray-100 p-2 rounded"
+        }`}
+      >
         <span className="font-semibold">Total:</span>{" "}
         {route?.distance
           ? convertDistance(route.distance, distanceUnit)
@@ -187,16 +196,21 @@ export default function MapPage() {
           : "-"}
       </p>
 
-      <ol className="space-y-2 ">
+      {/* Steps List */}
+      <ol className="space-y-2">
         {route.steps.map((step, i) => (
           <li
             key={i}
-            className="flex items-center justify-between bg-white dark:bg-gray-800 rounded p-2 shadow-sm"
+            className={`flex items-center justify-between rounded p-2 shadow-sm ${
+              darkMode
+                ? "bg-gray-800 text-gray-200"
+                : "bg-gray-100 text-black"
+            }`}
           >
-            <span className="text-gray-800  dark:text-gray-200">
-  <span className="font-bold">{i + 1}.</span>{" "}
-  {formatInstruction(step, distanceUnit)}
-</span>
+            <span>
+              <span className="font-bold">{i + 1}.</span>{" "}
+              {formatInstruction(step, distanceUnit)}
+            </span>
             {voiceDirections && (
               <button
                 onClick={() => speak(formatInstruction(step, distanceUnit))}
@@ -215,6 +229,8 @@ export default function MapPage() {
     </p>
   )}
 </div>
+
+
 
 
         </aside>

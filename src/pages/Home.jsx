@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"; 
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ScrollableSection from "../components/ScrollableSection";
 import useGeolocation from "../hooks/useGeolocation";
@@ -12,8 +12,10 @@ export default function HomePage() {
 
   const [restaurants, setRestaurants] = useState([]);
   const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Stable images for restaurants and hotels
+  // Local fallback images
   const restaurantImages = [
     "/images/restaurant1.jpg",
     "/images/restaurant2.jpg",
@@ -31,15 +33,15 @@ export default function HomePage() {
     if (!position) return;
 
     const distanceMeters = getDistance(
-      [position.lng, position.lat],
-      [place.lng, place.lat]
+      [position.lat, position.lng],
+      [place.lat, place.lng]
     );
 
     navigate("/map", {
       state: {
         destination: place,
         userLocation: position,
-        distance: distanceMeters / 1000, // convert to km
+        distance: distanceMeters / 1000, // km
       },
     });
   };
@@ -52,7 +54,7 @@ export default function HomePage() {
           ? restaurantImages[index % restaurantImages.length]
           : hotelImages[index % hotelImages.length],
       distance: position
-        ? getDistance([position.lng, position.lat], [place.lng, place.lat]) / 1000 // meters → km
+        ? getDistance([position.lat, position.lng], [place.lat, place.lng]) / 1000
         : null,
     }));
 
@@ -60,6 +62,9 @@ export default function HomePage() {
     if (!position) return;
 
     const fetchNearbyData = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
         const nearbyRestaurants = await getNearbyPlaces(
           position.lat,
@@ -72,12 +77,18 @@ export default function HomePage() {
           "hotel"
         );
 
+        console.log("Fetched restaurants:", nearbyRestaurants);
+        console.log("Fetched hotels:", nearbyHotels);
+
         setRestaurants(addImagesAndDistance(nearbyRestaurants, "restaurant"));
         setHotels(addImagesAndDistance(nearbyHotels, "hotel"));
       } catch (err) {
         console.error("HomePage: fetchNearbyData failed:", err);
+        setError("Failed to load nearby places.");
         setRestaurants([]);
         setHotels([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -111,7 +122,20 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* Restaurants Section */}
+        {/* Loading / Error / Empty States */}
+        {loading && (
+          <p className="text-center text-gray-500">Loading nearby places...</p>
+        )}
+        {error && (
+          <p className="text-center text-red-500">{error}</p>
+        )}
+        {!loading && !error && restaurants.length === 0 && hotels.length === 0 && (
+          <p className="text-center text-gray-500">
+            No nearby restaurants or hotels found within 2km.
+          </p>
+        )}
+
+        {/* Restaurants */}
         {restaurants.length > 0 && (
           <ScrollableSection
             title="Nearby Restaurants"
@@ -125,7 +149,7 @@ export default function HomePage() {
           />
         )}
 
-        {/* Hotels Section */}
+        {/* Hotels */}
         {hotels.length > 0 && (
           <ScrollableSection
             title="Nearby Hotels"
