@@ -68,43 +68,61 @@ export async function getRoute(start, end, mode = "driving") {
 
 // --- Nearby Places using Overpass ---
 export async function getNearbyPlaces(lat, lng, type) {
-  return cachedFetch(`nearby-${type}-${lat}-${lng}`, async () => {
-    const radius = 2000;
+  try {
+    let radius = 2000; // start 2km
+    let results = [];
+
     const filter =
       type === "hotel" ? '["tourism"="hotel"]' : `["amenity"="${type}"]`;
 
-    const query = `
-      [out:json];
-      (
-        node${filter}(around:${radius},${lat},${lng});
-        way${filter}(around:${radius},${lat},${lng});
-        relation${filter}(around:${radius},${lat},${lng});
-      );
-      out center;
-    `;
+    while (results.length < 5 && radius <= 20000) {
+      const query = `
+        [out:json];
+        (
+          node${filter}(around:${radius},${lat},${lng});
+          way${filter}(around:${radius},${lat},${lng});
+          relation${filter}(around:${radius},${lat},${lng});
+        );
+        out center;
+      `;
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
+        query
+      )}`;
+      const res = await fetch(url);
+      const data = await res.json();
 
-    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
-      query
-    )}`;
+      results = data.elements
+        .map((el, idx) => {
+          const elLat = el.lat || el.center?.lat;
+          const elLng = el.lon || el.center?.lon;
+          if (!elLat || !elLng) return null; // skip if no coords
 
-    const res = await fetch(url);
-    const data = await res.json();
+          return {
+            id: el.id || idx,
+            name: el.tags?.name || `${type} ${idx + 1}`,
+            type,
+            address:
+              el.tags?.addr_full ||
+              el.tags?.street ||
+              el.tags?.addr_city ||
+              "Unknown address",
+            lat: elLat,
+            lng: elLng,
+            image: `https://source.unsplash.com/400x300/?${type}`,
+          };
+        })
+        .filter(Boolean); // remove nulls
 
-    return data.elements.map((el, idx) => ({
-      id: el.id || idx,
-      name: el.tags?.name || `${type} ${idx + 1}`,
-      type,
-      address:
-        el.tags?.addr_full ||
-        el.tags?.street ||
-        el.tags?.addr_city ||
-        "Unknown address",
-      lat: el.lat || el.center?.lat,
-      lng: el.lon || el.center?.lon,
-      image: `https://source.unsplash.com/400x300/?${type}`,
-    }));
-  });
+      radius *= 2; // double radius if too few results
+    }
+
+    return results;
+  } catch (err) {
+    console.error(`Error fetching nearby ${type}s:`, err);
+    return [];
+  }
 }
+
 
 // --- Distance Calculation ---
 export function getDistance([lng1, lat1], [lng2, lat2]) {

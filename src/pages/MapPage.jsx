@@ -142,7 +142,7 @@ export default function MapPage() {
 {/* Directions */}
 <div className="flex-1 overflow-y-auto p-4 text-sm ">
   {/* Mode switch */}
-  <div className="p-2 flex space-x-2 bg-gray-100  dark:bg-gray-100 rounded-md mb-4">
+  <div className="p-2 flex space-x-2 bg-gray-800  dark:bg-gray-100 rounded-md mb-4">
     {[
       { key: "driving", label: "🚗 Driving", color: "" },
       { key: "walking", label: "🚶 Walking", color: "green" },
