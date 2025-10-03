@@ -11,9 +11,7 @@ export default function SearchPage() {
   return (
     <div className={`${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"} h-screen flex flex-col`}>
       {/* Page title (not fixed) */}
-      <div className="px-4 py-4 border-b bg-transparent">
-        <h1 className="text-lg font-bold">Search Destination</h1>
-      </div>
+      
 
       {/* Search bar */}
       <div className="p-4 z-10 text-gray-900">

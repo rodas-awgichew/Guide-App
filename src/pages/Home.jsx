@@ -101,26 +101,41 @@ export default function HomePage() {
         darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
       }`}
     >
+      
+     
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero Section */}
-        <section className="text-center py-12">
-          <h1
-            className={`text-4xl sm:text-5xl font-bold mb-4 ${
-              darkMode ? "text-white" : "text-gray-900"
-            }`}
-          >
-            Explore Your City 🌍
-          </h1>
-          <p
-            className={`text-lg max-w-2xl mx-auto ${
-              darkMode ? "text-gray-300" : "text-gray-600"
-            }`}
-          >
-            Discover nearby restaurants, hotels, and landmarks — all in one
-            place. Smooth navigation, smart suggestions, and a beautiful UI
-            designed for you.
-          </p>
-        </section>
+<section className="relative text-center py-20 rounded-2xl overflow-hidden">
+  {/* Background image with dark overlay */}
+  <div className="absolute inset-0">
+    <img
+      src="/assets/bg.jpg"
+      alt=""
+      className="w-full h-full object-cover opacity-40"
+    />
+    <div className="absolute inset-0 bg-black/50"></div>
+  </div>
+
+  {/* Content */}
+  <div className="relative z-10 px-4">
+    <h1
+      className={`text-4xl sm:text-5xl font-bold mb-4 ${
+        darkMode ? "text-white" : "text-gray-900"
+      }`}
+    >
+      Explore Your City 🌍
+    </h1>
+    <p
+      className={`text-lg max-w-2xl mx-auto ${
+        darkMode ? "text-gray-300" : "text-gray-100"
+      }`}
+    >
+      Discover nearby restaurants, hotels, and landmarks — all in one place.  
+      Smooth navigation,and smart suggestions.
+    </p>
+  </div>
+</section>
+
 
         {/* Loading / Error / Empty States */}
         {loading && (
